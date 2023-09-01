@@ -1,6 +1,18 @@
-{ pkgs, androidSdk, androidComposition, buildToolsVersion, extraPKGS ? [] }:
-
-with pkgs;
+{ pkgs, androidSdk, androidComposition, buildToolsVersion, rustc }:
+let
+  libclang_all = pkgs.symlinkJoin {
+    name = "libclang";
+    paths = [pkgs.libclang pkgs.libclang.dev pkgs.libclang.lib];
+  };
+  glibc_full = pkgs.symlinkJoin {
+    name = "glibc";
+    paths = [pkgs.glibc pkgs.glibc.dev];
+  };
+  gcc_full = pkgs.symlinkJoin {
+    name = "gcc";
+    paths = with pkgs.stdenv; [ cc.cc.lib cc.cc.dev ];
+  };
+in with pkgs;
 devshell.mkShell {
   name = "flutter";
   motd = ''
@@ -12,6 +24,18 @@ devshell.mkShell {
     {
       name  = "ANDROID_HOME";
       value = "${androidSdk}/libexec/android-sdk";
+    }
+    {
+      name = "LIBCLANG_PATH";
+      value = "${libclang_all}";
+    }
+    {
+      name = "GCC_PATH";
+      value = gcc_full;
+    }
+    {
+      name = "GLIBC_PATH";
+      value = glibc_full;
     }
     {
       name  = "ANDROID_SDK_ROOT";
@@ -78,6 +102,8 @@ devshell.mkShell {
     nodePackages.firebase-tools
     sd
     fd
-  ] ++ extraPKGs;
+    rustc
+    just
+  ];
 }
 

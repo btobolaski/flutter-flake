@@ -9,10 +9,15 @@
     devshell = {
       url = "github:numtide/devshell";
     };
+    rust-overlay = {
+      url = "github:oxalica/rust-overlay";
+      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.flake-utils.follows = "flake-utils";
+    };
   };
 
-  
-  outputs = { self, nixpkgs, flake-utils, devshell }:
+
+  outputs = { self, nixpkgs, flake-utils, devshell, rust-overlay }:
   flake-utils.lib.eachDefaultSystem (system:
     let
       pkgs = import nixpkgs {
@@ -23,11 +28,17 @@
         };
         overlays = [
           devshell.overlays.default
+          rust-overlay.overlays.default
         ];
       };
 
+      rustc = pkgs.rust-bin.stable."1.71.0".default.override {
+        extensions = ["rust-src"];
+        targets = ["aarch64-linux-android" "armv7-linux-androideabi" "x86_64-linux-android" "i686-linux-android" "wasm32-unknown-unknown"];
+      };
+
       buildToolsVersion = "31.0.0";
-     
+
       androidComposition = pkgs.androidenv.composeAndroidPackages {
         toolsVersion = "26.1.1";
         platformToolsVersion = "33.0.3";
@@ -56,8 +67,8 @@
         androidSdk
       ];
 
-      devShell = import ./devshell.nix { 
-        inherit pkgs androidSdk androidComposition buildToolsVersion; 
+      devShell = import ./devshell.nix {
+        inherit pkgs androidSdk androidComposition buildToolsVersion rustc;
       };
     }) // {
       templates = {
