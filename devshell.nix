@@ -1,4 +1,4 @@
-{ pkgs, androidSdk, androidComposition, buildToolsVersion }:
+{ pkgs, androidSdk, androidComposition, buildToolsVersion, extraPKGS ? [] }:
 
 with pkgs;
 devshell.mkShell {
@@ -78,6 +78,6 @@ devshell.mkShell {
     nodePackages.firebase-tools
     sd
     fd
-  ];
+  ] ++ extraPKGs;
 }
 
